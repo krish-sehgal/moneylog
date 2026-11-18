@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs"
 import type { Request, Response } from "express"
 import { ApiError, ApiResponse } from "../lib/api.js"
 import { signToken } from "../lib/jwt.js"
+import { getAuthUser } from "../middleware/requireAuth.js"
 import { UserModel } from "../model/user.js"
 import { loginSchema } from "../validation/auth.validation.js"
 
@@ -60,4 +61,8 @@ export async function login(req: Request, res: Response) {
             token,
         },
     ))
+}
+
+export function me(req: Request, res: Response) {
+    res.status(200).json(new ApiResponse(200, "Current user", getAuthUser(req)))
 }
