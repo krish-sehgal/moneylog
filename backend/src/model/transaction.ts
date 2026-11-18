@@ -1,10 +1,12 @@
 import mongoose, { model, Schema } from "mongoose";
+import { TRANSACTION_ENTRIES, TransactionEntry } from "../types/index.js";
 
-interface ITransaction {
+export interface ITransaction {
     userId: mongoose.Types.ObjectId;
     amount: number;
-    entry: "debit" | "credit";
-    notes: string;
+    entry: TransactionEntry;
+    notes?: string;
+    createdAt?: Date;
 }
 
 const transactionSchema = new Schema<ITransaction>({
@@ -19,11 +21,13 @@ const transactionSchema = new Schema<ITransaction>({
     },
     entry: {
         type: String,
-        enum: ['debit', 'credit'],
+        enum: TRANSACTION_ENTRIES,
         required: true
     },
     notes: {
-        type: String
+        type: String,
+        maxlength: 250,
+        trim: true
     }
 }, { timestamps: true });
 
