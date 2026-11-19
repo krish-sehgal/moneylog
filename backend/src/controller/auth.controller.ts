@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 import type { Request, Response } from "express"
 import { ApiError, ApiResponse } from "../lib/api.js"
+import { AUTH_COOKIE, authCookieOptions, clearAuthCookieOptions } from "../lib/authCookie.js"
 import { signToken } from "../lib/jwt.js"
 import { getAuthUser } from "../middleware/requireAuth.js"
 import { UserModel } from "../model/user.js"
@@ -51,6 +52,8 @@ export async function login(req: Request, res: Response) {
 
     const token = signToken({ sub: user._id.toString(), phone: user.phone })
 
+    res.cookie(AUTH_COOKIE, token, authCookieOptions())
+
     const statusCode = isNewUser ? 201 : 200
 
     res.status(statusCode).json(new ApiResponse(
@@ -58,9 +61,13 @@ export async function login(req: Request, res: Response) {
         isNewUser ? "Account created and logged in" : "Logged in",
         {
             user: { id: user._id.toString(), phone: user.phone },
-            token,
         },
     ))
+}
+
+export function logout(_req: Request, res: Response) {
+    res.clearCookie(AUTH_COOKIE, clearAuthCookieOptions())
+    res.status(200).json(new ApiResponse(200, "Logged out"))
 }
 
 export function me(req: Request, res: Response) {

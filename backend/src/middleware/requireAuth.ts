@@ -1,11 +1,18 @@
 import type { NextFunction, Request, Response } from "express"
 import mongoose from "mongoose"
 import { ApiError } from "../lib/api.js"
+import { AUTH_COOKIE } from "../lib/authCookie.js"
 import { verifyToken } from "../lib/jwt.js"
 import { UserModel } from "../model/user.js"
 import type { AuthUser } from "../types/auth.js"
 
-function getBearerToken(req: Request): string {
+function getAuthToken(req: Request): string {
+    const cookieToken = (req.cookies as Record<string, unknown> | undefined)?.[AUTH_COOKIE]
+    if (typeof cookieToken === "string" && cookieToken) {
+        return cookieToken
+    }
+
+    // Keep bearer support for non-browser clients
     const header = req.headers.authorization
     if (!header) {
         throw new ApiError(401, "Authentication required")
@@ -20,7 +27,7 @@ function getBearerToken(req: Request): string {
 }
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
-    const payload = verifyToken(getBearerToken(req))
+    const payload = verifyToken(getAuthToken(req))
 
     if (!mongoose.isValidObjectId(payload.sub)) {
         throw new ApiError(401, "Invalid or expired token")
